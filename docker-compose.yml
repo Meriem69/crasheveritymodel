@@ -1,29 +1,27 @@
 version: "3.8"
 
 # =============================================================================
-# Docker Compose — Prédiction Gravité Accidents Routiers + MLflow
+# Docker Compose — MLflow Tracking Server
 # =============================================================================
-# Ce fichier définit 3 services qui tournent ensemble dans des conteneurs :
-#   - mlflow   : serveur de tracking des expériences ML
-#   - api      : API FastAPI qui fait les prédictions
-#   - frontend : interface web (si applicable)
+# Lance le serveur MLflow dans un conteneur Docker.
+# Les données (runs, modèles, artefacts) sont persistées via un volume.
 #
 # Lancement : docker-compose up --build
 # Arrêt     : docker-compose down
+# Interface : http://localhost:5000
 # =============================================================================
 
 services:
 
   # ---------------------------------------------------------------------------
-  # SERVICE 1 : Serveur MLflow
+  # SERVICE : Serveur MLflow
   # ---------------------------------------------------------------------------
   # MLflow est lancé comme un service Docker indépendant.
   # Il stocke ses données dans un fichier SQLite (mlflow.db)
   # et ses artefacts dans un dossier local (mlartifacts/).
-  # Les autres conteneurs peuvent l'atteindre via http://mlflow:5000
   # ---------------------------------------------------------------------------
   mlflow:
-    image: python:3.11-slim                  # Image Python légère
+    image: python:3.11-slim
 
     container_name: mlflow_server
 
@@ -37,14 +35,11 @@ services:
                --default-artifact-root /mlflow/mlartifacts"
 
     ports:
-      - "5000:5000"                          # Accessible sur http://localhost:5000
+      - "5000:5000"                          # Interface accessible sur http://localhost:5000
 
     volumes:
       # Volume persistant : les données MLflow survivent aux redémarrages
       - mlflow_data:/mlflow
-
-    networks:
-      - crash_network
 
     healthcheck:
       # Vérifie que le serveur MLflow répond correctement
@@ -53,55 +48,9 @@ services:
       timeout: 10s
       retries: 3
 
-  # ---------------------------------------------------------------------------
-  # SERVICE 2 : API FastAPI
-  # ---------------------------------------------------------------------------
-  # L'API de prédiction. Elle se connecte au serveur MLflow pour charger
-  # le modèle depuis le Registry au démarrage.
-  # ---------------------------------------------------------------------------
-  api:
-    build:
-      context: .                             # Utilise le Dockerfile à la racine
-      dockerfile: Dockerfile
-
-    container_name: crash_api
-
-    ports:
-      - "8000:8000"                          # API accessible sur http://localhost:8000
-
-    environment:
-      # URL du serveur MLflow — utilise le nom du service Docker comme hostname
-      - MLFLOW_TRACKING_URI=http://mlflow:5000
-      - MODEL_NAME=XGBoost_accidents_model
-      - MODEL_VERSION=latest
-
-    volumes:
-      # Monte le code source pour le développement (hot-reload)
-      - ./app:/app/app
-
-    depends_on:
-      mlflow:
-        condition: service_healthy           # Attend que MLflow soit prêt avant de démarrer
-
-    networks:
-      - crash_network
-
-    restart: unless-stopped                  # Redémarre automatiquement en cas d'erreur
-
 # =============================================================================
 # VOLUMES — Données persistantes
 # =============================================================================
-# Sans volumes, toutes les données disparaissent quand le conteneur s'arrête.
-# Avec volumes, les données MLflow (runs, artefacts, modèles) sont conservées.
 volumes:
   mlflow_data:
     driver: local
-
-# =============================================================================
-# RÉSEAU — Communication entre conteneurs
-# =============================================================================
-# Les conteneurs sur le même réseau peuvent se parler par leur nom de service.
-# Ex: l'API atteint MLflow via "http://mlflow:5000" (pas "localhost:5000")
-networks:
-  crash_network:
-    driver: bridge
