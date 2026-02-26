@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prédiction Gravité Accident | Service Public</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --blue-france: #000091;
+            --red-marianne: #e1000f;
+            --grey-bg: #f6f6f6;
+            --grey-border: #e5e5e5;
+            --text-dark: #1e1e1e;
+            --text-grey: #666666;
+        }
+        
+        * {
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: var(--grey-bg);
+            color: var(--text-dark);
+        }
+        
+        /* Header gouvernemental */
+        .header-gouv {
+            background-color: white;
+            border-bottom: 3px solid var(--blue-france);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .header-gouv .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .header-gouv .logo-rf {
+            width: 70px;
+            height: 70px;
+        }
+        
+        .header-gouv .site-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--blue-france);
+        }
+        
+        .header-gouv .site-tagline {
+            font-size: 0.85rem;
+            color: var(--text-grey);
+        }
+        
+        /* Contenu principal */
+        .main-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .page-title {
+            color: var(--blue-france);
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-subtitle {
+            color: var(--text-grey);
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Cards */
+        .card-gouv {
+            background: white;
+            border: 1px solid var(--grey-border);
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-gouv-header {
+            background: var(--blue-france);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px 8px 0 0;
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+        
+        .card-gouv-body {
+            padding: 1.5rem;
+        }
+        
+        /* Formulaire */
+        .form-label {
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            margin-bottom: 0.4rem;
+        }
+        
+        .form-select, .form-control {
+            border: 1px solid #cecece;
+            border-radius: 4px;
+            padding: 0.6rem 0.8rem;
+            font-size: 0.95rem;
+        }
+        
+        .form-select:focus, .form-control:focus {
+            border-color: var(--blue-france);
+            box-shadow: 0 0 0 3px rgba(0, 0, 145, 0.1);
+        }
+        
+        /* Boutons */
+        .btn-gouv {
+            background-color: var(--blue-france);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 4px;
+        }
+        
+        .btn-gouv:hover {
+            background-color: #1212ff;
+            color: white;
+        }
+        
+        .btn-outline-gouv {
+            background-color: transparent;
+            color: var(--blue-france);
+            border: 1px solid var(--blue-france);
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+        
+        .btn-outline-gouv:hover {
+            background-color: var(--blue-france);
+            color: white;
+        }
+        
+        /* Résultats */
+        .result-grave {
+            background-color: #ffe5e5;
+            border-left: 4px solid var(--red-marianne);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .result-grave h3 {
+            color: var(--red-marianne);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .result-pas-grave {
+            background-color: #e5f5e5;
+            border-left: 4px solid #0d6635;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .result-pas-grave h3 {
+            color: #0d6635;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .result-proba {
+            font-size: 0.95rem;
+            color: var(--text-grey);
+            margin-top: 0.5rem;
+            margin-bottom: 0;
+        }
+        
+        /* Section formulaire */
+        .form-section {
+            background: var(--grey-bg);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+        
+        .form-section-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--blue-france);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--blue-france);
+        }
+        
+        /* Footer */
+        .footer-gouv {
+            background: white;
+            border-top: 3px solid var(--blue-france);
+            padding: 1.5rem 0;
+            margin-top: 3rem;
+            text-align: center;
+        }
+        
+        .footer-gouv p {
+            color: var(--text-grey);
+            font-size: 0.85rem;
+            margin: 0.3rem 0;
+        }
+        
+        .footer-gouv a {
+            color: var(--blue-france);
+            text-decoration: none;
+        }
+        
+        .footer-gouv a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Navigation */
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+        }
+        
+        .nav-links a {
+            color: var(--blue-france);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Info box */
+        .info-box {
+            background: #f5f5fe;
+            border-left: 4px solid var(--blue-france);
+            padding: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-grey);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header-gouv">
+        <div class="container">
+            <div class="logo">
+                <svg class="logo-rf" viewBox="0 0 100 100">
+                    <rect width="33" height="100" fill="#000091"/>
+                    <rect x="33" width="34" height="100" fill="#ffffff" stroke="#ccc" stroke-width="1"/>
+                    <rect x="67" width="33" height="100" fill="#e1000f"/>
+                </svg>
+                <div>
+                    <div class="site-name">Sécurité Routière</div>
+                    <div class="site-tagline">Prédiction de gravité des accidents</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenu -->
+    <main class="main-content">
+        <h1 class="page-title">Évaluation de la gravité d'un accident</h1>
+        <p class="page-subtitle">Renseignez les caractéristiques pour obtenir une estimation de la gravité potentielle.</p>
+        
+        <!-- Navigation -->
+        <div class="nav-links">
+            <a href="/historique">📊 Historique</a>
+            <a href="/docs">📖 Documentation API</a>
+        </div>
+        
+        <!-- Résultat -->
+        {% if prediction %}
+            {% if 'GRAVE' in prediction and 'PAS' not in prediction %}
+            <div class="result-grave">
+                <h3>⚠️ Accident potentiellement GRAVE</h3>
+                <p class="result-proba">Probabilité : {{ proba }}%</p>
+            </div>
+            {% else %}
+            <div class="result-pas-grave">
+                <h3>✅ Accident potentiellement PAS GRAVE</h3>
+                <p class="result-proba">Probabilité de gravité : {{ proba }}%</p>
+            </div>
+            {% endif %}
+        {% endif %}
+        
+        <!-- Formulaire -->
+        <div class="card-gouv">
+            <div class="card-gouv-header">
+                📝 Caractéristiques de l'accident
+            </div>
+            <div class="card-gouv-body">
+                <form action="/predict_form" method="POST">
+                    <div class="row">
+                        <!-- Colonne 1 -->
+                        <div class="col-md-6">
+                            <div class="form-section">
+                                <div class="form-section-title">🌍 Environnement</div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Luminosité</label>
+                                    <select name="lum" class="form-select">
+                                        <option value="1">Plein jour</option>
+                                        <option value="2">Crépuscule / Aube</option>
+                                        <option value="3">Nuit sans éclairage</option>
+                                        <option value="4">Nuit avec éclairage</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Météo</label>
+                                    <select name="atm" class="form-select">
+                                        <option value="1">Normale</option>
+                                        <option value="2">Pluie légère</option>
+                                        <option value="3">Pluie forte</option>
+                                        <option value="4">Neige / Grêle</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Localisation</label>
+                                    <select name="agg" class="form-select">
+                                        <option value="1">Hors agglomération</option>
+                                        <option value="2">En agglomération</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-section">
+                                <div class="form-section-title">🛣️ Route</div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Type de route</label>
+                                    <select name="catr" class="form-select">
+                                        <option value="1">Autoroute</option>
+                                        <option value="2">Nationale</option>
+                                        <option value="3">Départementale</option>
+                                        <option value="4">Communale</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Intersection</label>
+                                    <select name="int" class="form-select">
+                                        <option value="1">Hors intersection</option>
+                                        <option value="2">En X</option>
+                                        <option value="3">En T</option>
+                                        <option value="6">Giratoire</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Terre-plein central</label>
+                                    <select name="terre_plein" class="form-select">
+                                        <option value="0">Non</option>
+                                        <option value="1">Oui</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Colonne 2 -->
+                        <div class="col-md-6">
+                            <div class="form-section">
+                                <div class="form-section-title">💥 Accident</div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Type de collision</label>
+                                    <select name="col" class="form-select">
+                                        <option value="1">Frontale</option>
+                                        <option value="2">Par l'arrière</option>
+                                        <option value="3">Latérale</option>
+                                        <option value="7">Sans collision</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Véhicule</label>
+                                    <select name="catv" class="form-select">
+                                        <option value="7">Voiture</option>
+                                        <option value="1">Vélo</option>
+                                        <option value="2">Cyclomoteur</option>
+                                        <option value="31">Moto</option>
+                                        <option value="13">Poids lourd</option>
+                                        <option value="50">Trottinette</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Heure</label>
+                                            <input type="number" name="heure" class="form-control" min="0" max="23" value="12">
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Jour</label>
+                                            <select name="jour_semaine" class="form-select">
+                                                <option value="0">Lundi</option>
+                                                <option value="1">Mardi</option>
+                                                <option value="2">Mercredi</option>
+                                                <option value="3">Jeudi</option>
+                                                <option value="4">Vendredi</option>
+                                                <option value="5">Samedi</option>
+                                                <option value="6">Dimanche</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Weekend</label>
+                                    <select name="weekend" class="form-select">
+                                        <option value="0">Non</option>
+                                        <option value="1">Oui</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-section">
+                                <div class="form-section-title">👤 Usager</div>
+                                
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Sexe</label>
+                                            <select name="sexe" class="form-select">
+                                                <option value="1">Homme</option>
+                                                <option value="2">Femme</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Âge</label>
+                                            <input type="number" name="age" class="form-control" min="1" max="110" value="30">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Équipement de sécurité</label>
+                                    <select name="secu1" class="form-select">
+                                        <option value="1">Ceinture</option>
+                                        <option value="2">Casque</option>
+                                        <option value="0">Aucun</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn-gouv">Évaluer la gravité</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Info -->
+        <div class="info-box">
+            <strong>ℹ️ Information :</strong> Ce service utilise un modèle d'IA entraîné sur les données BAAC 2022-2024. Résultats fournis à titre indicatif.
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer-gouv">
+        <p>
+            <a href="/health">État du service</a> · 
+            <a href="/docs">Documentation</a> · 
+            <a href="/historique">Historique</a>
+        </p>
+        <p>Projet réalisé par Leila, Caroline, Ina & Meriem — Simplon 2026</p>
+    </footer>
+</body>
+</html>
