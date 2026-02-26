@@ -1,47 +1,21 @@
-version: "3.8"
-
-# =============================================================================
-# Docker Compose — Prédiction Gravité Accidents Routiers + MLflow
-# =============================================================================
-# 3 services :
-#   - mlflow   : serveur de tracking des expériences ML (port 5000)
-#   - api      : API FastAPI de prédiction (port 8000)
-#   - db       : base de données PostgreSQL pour l'historique
-#
-# Lancement : docker-compose up --build
-# Arrêt     : docker-compose down
-# =============================================================================
-
 services:
 
-  # ---------------------------------------------------------------------------
-  # SERVICE 1 : Serveur MLflow
-  # ---------------------------------------------------------------------------
   mlflow:
-    image: python:3.11-slim
+    image: ghcr.io/mlflow/mlflow:v2.9.2
     container_name: mlflow_server
     command: >
-      bash -c "pip install mlflow -q &&
-               mlflow server
-               --host 0.0.0.0
-               --port 5000
-               --backend-store-uri sqlite:///mlflow/mlflow.db
-               --default-artifact-root /mlflow/mlartifacts"
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:///mlflow/mlflow.db
+      --default-artifact-root /mlflow/mlartifacts
     ports:
       - "5000:5000"
     volumes:
       - mlflow_data:/mlflow
     networks:
       - crash_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
 
-  # ---------------------------------------------------------------------------
-  # SERVICE 2 : Base de données PostgreSQL
-  # ---------------------------------------------------------------------------
   db:
     image: postgres:15
     container_name: crash_db
@@ -61,9 +35,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # ---------------------------------------------------------------------------
-  # SERVICE 3 : API FastAPI
-  # ---------------------------------------------------------------------------
   api:
     build:
       context: .
@@ -78,26 +49,18 @@ services:
       - DB_USER=admin
       - DB_PASSWORD=password123
     depends_on:
-      mlflow:
-        condition: service_healthy
-      db:
-        condition: service_healthy
+      - mlflow
+      - db
     networks:
       - crash_network
     restart: unless-stopped
 
-# =============================================================================
-# VOLUMES
-# =============================================================================
 volumes:
   mlflow_data:
     driver: local
   postgres_data:
     driver: local
 
-# =============================================================================
-# RÉSEAU
-# =============================================================================
 networks:
   crash_network:
     driver: bridge

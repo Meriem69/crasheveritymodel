@@ -9,7 +9,7 @@ python-multipart
 jinja2
 
 # Machine Learning
-scikit-learn
+scikit-learn==1.5.1
 xgboost
 lightgbm
 optuna

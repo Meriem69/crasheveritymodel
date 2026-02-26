@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import joblib
 import numpy as np
 import uvicorn
@@ -146,7 +146,7 @@ async def historique(request: Request):
 class AccidentData(BaseModel):
     lum: int
     agg: int
-    inter: int
+    int_: int = Field(alias='int')
     atm: int
     col: int
     catr: int
@@ -163,7 +163,7 @@ class AccidentData(BaseModel):
 @app.post("/predict")
 def predict(data: AccidentData):
     input_data = np.array([[
-        data.lum, data.agg, data.inter, data.atm, data.col,
+        data.lum, data.agg, data.int_, data.atm, data.col,
         data.catr, data.catv, data.heure, data.jour_semaine,
         data.weekend, data.sexe, data.age, data.secu1, data.terre_plein
     ]])
@@ -214,7 +214,7 @@ async def predict_form(
     request: Request,
     lum: int = Form(...),
     agg: int = Form(...),
-    inter: int = Form(...),
+    intersection: int = Form(...),
     atm: int = Form(...),
     col: int = Form(...),
     catr: int = Form(...),
@@ -228,7 +228,7 @@ async def predict_form(
     terre_plein: int = Form(...),
 ):
     input_data = np.array([[
-        lum, agg, inter, atm, col, catr, catv,
+        lum, agg, intersection, atm, col, catr, catv,
         heure, jour_semaine, weekend, sexe, age, secu1, terre_plein
     ]])
 
@@ -267,3 +267,4 @@ async def predict_form(
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
