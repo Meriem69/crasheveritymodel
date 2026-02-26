@@ -1,24 +1,28 @@
 # =============================================================================
 # requirements.txt — Dépendances du projet
-# Installation : pip install -r requirements.txt
 # =============================================================================
+
+# API
+fastapi
+uvicorn
+python-multipart
+jinja2
 
 # Machine Learning
 scikit-learn
 xgboost
 lightgbm
 optuna
+joblib
+numpy
+pandas
 
 # MLflow
 mlflow
 
-# Data
-pandas
-numpy
+# Base de données
+psycopg2-binary
 
 # Visualisation
 matplotlib
 seaborn
-
-# Sauvegarde modèles
-joblib

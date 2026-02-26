@@ -1,31 +1,25 @@
 version: "3.8"
 
 # =============================================================================
-# Docker Compose — MLflow Tracking Server
+# Docker Compose — Prédiction Gravité Accidents Routiers + MLflow
 # =============================================================================
-# Lance le serveur MLflow dans un conteneur Docker.
-# Les données (runs, modèles, artefacts) sont persistées via un volume.
+# 3 services :
+#   - mlflow   : serveur de tracking des expériences ML (port 5000)
+#   - api      : API FastAPI de prédiction (port 8000)
+#   - db       : base de données PostgreSQL pour l'historique
 #
 # Lancement : docker-compose up --build
 # Arrêt     : docker-compose down
-# Interface : http://localhost:5000
 # =============================================================================
 
 services:
 
   # ---------------------------------------------------------------------------
-  # SERVICE : Serveur MLflow
-  # ---------------------------------------------------------------------------
-  # MLflow est lancé comme un service Docker indépendant.
-  # Il stocke ses données dans un fichier SQLite (mlflow.db)
-  # et ses artefacts dans un dossier local (mlartifacts/).
+  # SERVICE 1 : Serveur MLflow
   # ---------------------------------------------------------------------------
   mlflow:
     image: python:3.11-slim
-
     container_name: mlflow_server
-
-    # Installe MLflow et lance le serveur au démarrage du conteneur
     command: >
       bash -c "pip install mlflow -q &&
                mlflow server
@@ -33,24 +27,77 @@ services:
                --port 5000
                --backend-store-uri sqlite:///mlflow/mlflow.db
                --default-artifact-root /mlflow/mlartifacts"
-
     ports:
-      - "5000:5000"                          # Interface accessible sur http://localhost:5000
-
+      - "5000:5000"
     volumes:
-      # Volume persistant : les données MLflow survivent aux redémarrages
       - mlflow_data:/mlflow
-
+    networks:
+      - crash_network
     healthcheck:
-      # Vérifie que le serveur MLflow répond correctement
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # SERVICE 2 : Base de données PostgreSQL
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:15
+    container_name: crash_db
+    environment:
+      POSTGRES_DB: accidents_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - crash_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d accidents_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # SERVICE 3 : API FastAPI
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crash_api
+    ports:
+      - "8000:8000"
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - DB_HOST=db
+      - DB_NAME=accidents_db
+      - DB_USER=admin
+      - DB_PASSWORD=password123
+    depends_on:
+      mlflow:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - crash_network
+    restart: unless-stopped
 
 # =============================================================================
-# VOLUMES — Données persistantes
+# VOLUMES
 # =============================================================================
 volumes:
   mlflow_data:
     driver: local
+  postgres_data:
+    driver: local
+
+# =============================================================================
+# RÉSEAU
+# =============================================================================
+networks:
+  crash_network:
+    driver: bridge
