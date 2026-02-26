@@ -1,0 +1,24 @@
+# =============================================================================
+# requirements.txt — Dépendances du projet
+# Installation : pip install -r requirements.txt
+# =============================================================================
+
+# Machine Learning
+scikit-learn
+xgboost
+lightgbm
+optuna
+
+# MLflow
+mlflow
+
+# Data
+pandas
+numpy
+
+# Visualisation
+matplotlib
+seaborn
+
+# Sauvegarde modèles
+joblib
